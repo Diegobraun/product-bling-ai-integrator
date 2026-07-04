@@ -9,8 +9,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ImageDownloadService {
@@ -24,6 +28,46 @@ public class ImageDownloadService {
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(TIMEOUT_CONEXAO)
             .build();
+
+    private static final Pattern[] META_IMAGEM = {
+            Pattern.compile("(?:property|name)=\"(?:og:image|twitter:image)\"[^>]*content=\"([^\"]+)\""),
+            Pattern.compile("content=\"([^\"]+)\"[^>]*(?:property|name)=\"(?:og:image|twitter:image)\"")
+    };
+
+    public byte[] baixarMelhor(List<String> urls, List<String> paginas) {
+        byte[] direta = baixarMelhor(urls);
+        if (direta != null) {
+            return direta;
+        }
+        return baixarMelhor(extrairImagensDasPaginas(paginas));
+    }
+
+    private List<String> extrairImagensDasPaginas(List<String> paginas) {
+        List<String> urls = new ArrayList<>();
+        if (paginas == null) {
+            return urls;
+        }
+        for (String pagina : paginas) {
+            try {
+                byte[] corpo = baixar(pagina);
+                if (corpo == null) {
+                    continue;
+                }
+                String html = new String(corpo, StandardCharsets.UTF_8);
+                for (Pattern padrao : META_IMAGEM) {
+                    Matcher m = padrao.matcher(html);
+                    while (m.find()) {
+                        String url = m.group(1);
+                        if (url.startsWith("http") && !urls.contains(url)) {
+                            urls.add(url);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return urls;
+    }
 
     public byte[] baixarMelhor(List<String> urls) {
         if (urls == null) {

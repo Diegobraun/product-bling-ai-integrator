@@ -34,25 +34,30 @@ public class PesquisaProdutoIaService {
     private PesquisaDeProduto parsear(String texto) {
         try {
             JsonNode n = json.readTree(RespostaJson.extrairObjeto(texto));
-            List<String> imagens = new ArrayList<>();
-            for (JsonNode img : n.path("imagens")) {
-                String url = img.asText("");
-                if (url.startsWith("http")) {
-                    imagens.add(url);
-                }
-            }
             return new PesquisaDeProduto(
                     textoOuNull(n, "marca"),
                     textoOuNull(n, "modelo"),
                     textoOuNull(n, "categoria"),
                     textoOuNull(n, "ean"),
                     textoOuNull(n, "dadosBrutos"),
-                    imagens,
+                    urls(n, "imagens"),
+                    urls(n, "paginas"),
                     texto);
         } catch (Exception e) {
             throw new IllegalStateException(
                     "Não consegui parsear a pesquisa da IA como JSON:\n" + texto, e);
         }
+    }
+
+    private List<String> urls(JsonNode n, String campo) {
+        List<String> lista = new ArrayList<>();
+        for (JsonNode item : n.path(campo)) {
+            String url = item.asText("");
+            if (url.startsWith("http")) {
+                lista.add(url);
+            }
+        }
+        return lista;
     }
 
     private String textoOuNull(JsonNode n, String campo) {

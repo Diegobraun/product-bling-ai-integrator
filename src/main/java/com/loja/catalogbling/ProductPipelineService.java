@@ -146,7 +146,7 @@ public class ProductPipelineService {
         produto.setEan(resultado.ean());
         repo.save(produto);
 
-        byte[] imagem = downloads.baixarMelhor(resultado.imagens());
+        byte[] imagem = downloads.baixarMelhor(resultado.imagens(), resultado.paginas());
         if (imagem != null) {
             try {
                 processarImagem(produto, imagem);

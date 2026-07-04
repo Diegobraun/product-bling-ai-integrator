@@ -88,7 +88,10 @@ public final class ProductPrompts {
         - Imagens do produto: URLs DIRETAS de arquivos de imagem (o link deve responder
           com a própria imagem — .jpg/.jpeg/.png/.webp —, não com uma página HTML).
           Prefira foto oficial, alta resolução, fundo branco/limpo. Liste até 5, da
-          melhor para a pior.
+          melhor para a pior. NÃO invente URLs de imagem: só liste as que apareceram
+          de fato nas fontes.
+        - Páginas de produto: liste também as URLs das páginas onde encontrou o
+          produto (campo "paginas") — elas servem de fallback para extrair a imagem.
 
         Regras:
         - NÃO invente especificações: inclua apenas o que encontrou nas fontes.
@@ -104,7 +107,8 @@ public final class ProductPrompts {
           "categoria": "...",
           "ean": "... ou null",
           "dadosBrutos": "ficha técnica completa em texto",
-          "imagens": ["https://.../produto.jpg", "..."]
+          "imagens": ["https://.../produto.jpg", "..."],
+          "paginas": ["https://.../pagina-do-produto", "..."]
         }
         """;
 
