@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="bloco" id="bloco-imagem">
+    <div th:if="${p.imagemUrlPublica != null}">
+        <img class="img-preview" th:src="${p.imagemUrlPublica}" alt="Imagem do produto">
+        <p class="muted" style="margin-top:8px">
+            <span th:text="${p.imagemKb} + ' KB'">200 KB</span> ·
+            1024×1024 ·
+            nitidez <span th:text="${#numbers.formatDecimal(p.imagemNitidez, 1, 0)}">120</span>
+            <span th:if="${p.imagemAprovada}" class="pill pill-ok">imagem ok</span>
+            <span th:unless="${p.imagemAprovada}" class="pill pill-warn">revisar imagem</span>
+        </p>
+    </div>
+    <p th:unless="${p.imagemUrlPublica != null}" class="muted">Nenhuma imagem processada ainda.</p>
+
+    <form th:attr="hx-post='/produtos/' + ${p.id} + '/imagem'"
+          hx-target="#bloco-imagem" hx-swap="outerHTML"
+          hx-encoding="multipart/form-data" style="margin-top:12px">
+        <input type="file" name="imagem" accept="image/*" required>
+        <div class="acoes">
+            <button type="submit" class="btn">Processar imagem (1024², ≤200KB)</button>
+            <span class="htmx-indicator spinner">processando…</span>
+        </div>
+    </form>
+</div>
+</body>
+</html>

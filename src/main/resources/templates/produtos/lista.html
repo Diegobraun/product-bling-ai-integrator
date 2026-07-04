@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/base :: head('Produtos')}"></head>
+<body>
+<header th:replace="~{fragmentos/base :: topbar(${blingConectado})}"></header>
+
+<div class="container">
+    <h1>Produtos</h1>
+
+    <div th:if="${#lists.isEmpty(produtos)}" class="card muted">
+        Nenhum produto ainda. Clique em <strong>+ Novo produto</strong> para começar.
+    </div>
+
+    <table th:unless="${#lists.isEmpty(produtos)}">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Título / Modelo</th>
+            <th>Categoria</th>
+            <th>Status</th>
+            <th>Imagem</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${produtos}">
+            <td th:text="${p.id}">1</td>
+            <td>
+                <a th:href="@{'/produtos/' + ${p.id}}"
+                   th:text="${p.titulo != null ? p.titulo : (p.marca + ' ' + p.modelo)}">Produto</a>
+            </td>
+            <td th:text="${p.categoria}">categoria</td>
+            <td>
+                <span class="pill" th:classappend="'status-' + ${p.status}"
+                      th:text="${p.status.rotulo}">Status</span>
+            </td>
+            <td>
+                <span th:if="${p.imagemUrlPublica != null}" class="pill pill-ok" th:text="${p.imagemKb} + ' KB'">200 KB</span>
+                <span th:unless="${p.imagemUrlPublica != null}" class="muted">—</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

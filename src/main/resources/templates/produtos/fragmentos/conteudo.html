@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="painel" id="painel-conteudo">
+
+    <!-- Estado inicial: ainda não gerou -->
+    <div th:if="${p.titulo == null}" class="card">
+        <h2>Gerar conteúdo</h2>
+        <p class="muted">
+            O Claude vai gerar título, descrição curta e descrição complementar seguindo
+            seus templates e padrões de SEO. Se houver imagem processada, ele também a avalia.
+        </p>
+        <div class="acoes">
+            <button class="btn btn-primary"
+                    th:attr="hx-post='/produtos/' + ${p.id} + '/gerar'"
+                    hx-target="#painel-conteudo" hx-swap="outerHTML"
+                    hx-indicator="#ind-gerar">
+                Gerar com o Claude
+            </button>
+            <span id="ind-gerar" class="htmx-indicator spinner">gerando…</span>
+        </div>
+    </div>
+
+    <!-- Conteúdo gerado -->
+    <div th:unless="${p.titulo == null}">
+
+        <div th:if="${p.status.name() == 'ERRO_PUBLICACAO'}" class="alerta">
+            Erro ao publicar no Bling: <span th:text="${p.erroPublicacao}">erro</span>
+        </div>
+        <div th:if="${p.status.name() == 'PUBLICADO'}" class="card" style="background:var(--ok-bg)">
+            <strong>Publicado no Bling.</strong> ID do produto:
+            <span th:text="${p.blingProductId}">123</span>
+        </div>
+
+        <!-- Edição manual dos campos -->
+        <form class="card"
+              th:attr="hx-post='/produtos/' + ${p.id} + '/campos'"
+              hx-target="#painel-conteudo" hx-swap="outerHTML">
+            <h2>Conteúdo (você pode editar direto)</h2>
+
+            <label>Título (SEO: tipo + marca + modelo + características)</label>
+            <input type="text" name="titulo" th:value="${p.titulo}">
+
+            <label>Descrição curta (resumida)</label>
+            <textarea name="descricaoCurta" rows="4" th:text="${p.descricaoCurta}"></textarea>
+
+            <label>Descrição complementar (HTML)</label>
+            <textarea name="descricaoComplementar" rows="12" th:text="${p.descricaoComplementar}"></textarea>
+
+            <h3>Pré-visualização</h3>
+            <div class="rendered" th:utext="${p.descricaoComplementar}">preview</div>
+
+            <div class="acoes">
+                <button type="submit" class="btn">Salvar edições</button>
+                <span class="htmx-indicator spinner">salvando…</span>
+            </div>
+        </form>
+
+        <!-- Avaliação da imagem pelo Claude -->
+        <div th:if="${p.avaliacaoImagem != null and !p.avaliacaoImagem.isEmpty()}" class="card">
+            <h2>Avaliação da imagem</h2>
+            <p class="muted" th:text="${p.avaliacaoImagem}">parecer</p>
+        </div>
+
+        <!-- Chat de revisão -->
+        <div class="card">
+            <h2>Revisar com o Claude</h2>
+            <div class="chat">
+                <div th:each="t : ${p.conversa}">
+                    <div th:if="${t.papel == 'user' and !t.conteudo.startsWith('[')}"
+                         class="msg msg-user" th:text="${t.conteudo}">pedido</div>
+                    <div th:if="${t.papel == 'assistant'}"
+                         class="msg msg-assistant">Claude atualizou o conteúdo acima.</div>
+                </div>
+            </div>
+            <form th:attr="hx-post='/produtos/' + ${p.id} + '/revisar'"
+                  hx-target="#painel-conteudo" hx-swap="outerHTML"
+                  hx-indicator="#ind-rev">
+                <textarea name="pedido" rows="2"
+                          placeholder="Ex.: deixe o título mais curto; destaque o Dual Band; adicione a garantia de 12 meses"></textarea>
+                <div class="acoes">
+                    <button type="submit" class="btn btn-primary">Pedir ajuste</button>
+                    <span id="ind-rev" class="htmx-indicator spinner">o Claude está ajustando…</span>
+                </div>
+            </form>
+        </div>
+
+        <!-- Ações de fluxo -->
+        <div class="card">
+            <h2>Publicação</h2>
+
+            <div class="acoes" th:if="${p.status.name() == 'GERADO' or p.status.name() == 'EM_REVISAO'}">
+                <button class="btn btn-ok"
+                        th:attr="hx-post='/produtos/' + ${p.id} + '/aprovar'"
+                        hx-target="#painel-conteudo" hx-swap="outerHTML">
+                    Aprovar conteúdo
+                </button>
+                <span class="muted">Aprovar libera a publicação no Bling.</span>
+            </div>
+
+            <div class="acoes" th:if="${p.status.name() == 'APROVADO' or p.status.name() == 'ERRO_PUBLICACAO'}">
+                <button class="btn btn-primary"
+                        th:disabled="${!blingConectado}"
+                        th:attr="hx-post='/produtos/' + ${p.id} + '/publicar'"
+                        hx-target="#painel-conteudo" hx-swap="outerHTML"
+                        hx-indicator="#ind-pub">
+                    Publicar no Bling
+                </button>
+                <span id="ind-pub" class="htmx-indicator spinner">enviando…</span>
+                <span th:unless="${blingConectado}" class="muted">
+                    Conecte o Bling primeiro (botão no topo).
+                </span>
+            </div>
+
+            <div class="acoes" th:if="${p.status.name() == 'PUBLICADO'}">
+                <button class="btn"
+                        th:disabled="${!blingConectado}"
+                        th:attr="hx-post='/produtos/' + ${p.id} + '/publicar'"
+                        hx-target="#painel-conteudo" hx-swap="outerHTML"
+                        hx-indicator="#ind-atu">
+                    Atualizar no Bling
+                </button>
+                <span id="ind-atu" class="htmx-indicator spinner">atualizando…</span>
+                <span class="muted">Reenvia o cadastro (PUT) para o produto já existente no Bling.</span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

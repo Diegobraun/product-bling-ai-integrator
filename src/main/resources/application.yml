@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: catalog-bling-ia-integration
+
+  datasource:
+    url: jdbc:h2:file:./dados/catalogo;AUTO_SERVER=TRUE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:coloque-sua-chave}
+  model: ${ANTHROPIC_MODEL:claude-sonnet-4-6}
+
+bling:
+  client-id: ${BLING_CLIENT_ID:seu-client-id}
+  client-secret: ${BLING_CLIENT_SECRET:seu-client-secret}
+
+app:
+  public-base-url: ${APP_PUBLIC_BASE_URL:http://localhost:8080}
+  storage-dir: ${APP_STORAGE_DIR:./dados/imagens}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/base :: head('Revisão do produto')}"></head>
+<body>
+<header th:replace="~{fragmentos/base :: topbar(${blingConectado})}"></header>
+
+<div class="container">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <h1 style="margin:0">Produto #<span th:text="${p.id}">1</span></h1>
+        <span class="pill" th:classappend="'status-' + ${p.status}" th:text="${p.status.rotulo}">Status</span>
+    </div>
+    <p class="muted" th:text="${p.marca} + ' · ' + ${p.modelo} + ' · ' + ${p.categoria}">marca · modelo</p>
+
+    <div class="grid-2">
+        <!-- Coluna esquerda: entrada + imagem -->
+        <div>
+            <div class="card">
+                <h2>Dados de entrada</h2>
+                <div class="rendered" style="white-space:pre-wrap" th:text="${p.dadosBrutos}">dados</div>
+            </div>
+
+            <div class="card">
+                <h2>Imagem</h2>
+                <div id="bloco-imagem" th:replace="~{produtos/fragmentos/imagem :: bloco}"></div>
+            </div>
+        </div>
+
+        <!-- Coluna direita: conteúdo gerado + revisão -->
+        <div id="painel-conteudo" th:replace="~{produtos/fragmentos/conteudo :: painel}"></div>
+    </div>
+</div>
+</body>
+</html>

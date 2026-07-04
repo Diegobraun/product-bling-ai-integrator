@@ -1,0 +1,7 @@
+target/
+dados/
+*.class
+.idea/
+*.iml
+.DS_Store
+.claude/
