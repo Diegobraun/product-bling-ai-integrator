@@ -19,7 +19,7 @@ Pré-requisitos: **JDK 21** e **Maven**.
 1. Configure as variáveis de ambiente (ou edite `application.yml`):
 
    ```bash
-   export ANTHROPIC_API_KEY=sk-ant-...
+   export ANTHROPIC_API_KEY=sk-ant-...   # se usar o provider claude (default)
    export BLING_CLIENT_ID=seu-client-id
    export BLING_CLIENT_SECRET=seu-client-secret
    # URL pública do app — o Bling BAIXA a imagem por ela.
@@ -67,14 +67,34 @@ spring:
    por GTIN/nome), atualiza via PUT; senão cria via POST. Produtos publicados
    têm o botão **Atualizar no Bling** para reenviar edições.
 
+## Provedores de IA (Claude, Gemini, Ollama)
+
+O provedor é escolhido no `application.yml` (ou por env), separadamente para a
+geração de conteúdo e para a pesquisa web:
+
+```yaml
+ia:
+  provider: claude           # claude | gemini | ollama   (geração de conteúdo)
+  pesquisa-provider: claude  # claude | gemini            (pesquisa web)
+```
+
+| Provedor | Custo | Geração + visão | Pesquisa web | Configuração |
+|---|---|---|---|---|
+| **claude** (default) | pago (centavos/cadastro) | ✅ melhor escrita pt-BR | ✅ web search | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-sonnet-4-6`) |
+| **gemini** | **free tier** | ✅ | ✅ Google Search grounding | `GEMINI_API_KEY` (crie grátis em https://aistudio.google.com), `GEMINI_MODEL` (default `gemini-2.5-flash`) |
+| **ollama** | **grátis, 100% local** | ✅ (modelo multimodal) | ❌ não tem — use claude ou gemini na pesquisa | `ollama pull gemma3`; `OLLAMA_BASE_URL` (default `http://localhost:11434`), `OLLAMA_MODEL` (default `gemma3`) |
+
+Setup 100% free: `IA_PROVIDER=gemini IA_PESQUISA_PROVIDER=gemini`.
+Low cost máximo (geração local): `IA_PROVIDER=ollama IA_PESQUISA_PROVIDER=gemini`.
+
+Atenção: no free tier do Gemini o Google pode usar os dados enviados para
+treinamento — irrelevante para ficha técnica de produto, mas fique ciente.
+
 ## Onde ajustar os padrões
 
 - Templates de descrição, padrão de título, regras de categoria e o prompt da
-  pesquisa web: `claude/ProductPrompts.java` — é o único lugar que você mexe
-  para mudar o padrão.
-- Modelo do Claude: `anthropic.model` no `application.yml` (ou env
-  `ANTHROPIC_MODEL`; default `claude-sonnet-4-6`, use `claude-opus-4-8` para
-  escrita premium).
+  pesquisa web: `ia/ProductPrompts.java` — é o único lugar que você mexe
+  para mudar o padrão (vale para todos os provedores).
 - Tamanho/limite da imagem: `imagem/ImageProcessingService.java`; critérios da
   imagem baixada da web (lado mínimo etc.): `imagem/ImageDownloadService.java`.
 
@@ -92,11 +112,14 @@ spring:
 
 ```
 com.loja.catalogbling
-├── config/      AnthropicProperties, BlingProperties, AppProperties (@ConfigurationProperties)
+├── config/      records @ConfigurationProperties (anthropic, gemini, ollama, bling, app)
 ├── domain/      entidades (Product, ProductStatus, ConversationTurn, BlingToken)
 ├── repository/  repositórios JPA
-├── claude/      AnthropicMessagesClient (transporte HTTP) + ProductPrompts
-│                + ClaudeContentService (geração/revisão) + ProductResearchService (pesquisa web)
+├── ia/          portas ChatIa + PesquisaWebIa, ProductPrompts,
+│   │            ConteudoIaService + PesquisaProdutoIaService (neutros de provedor)
+│   ├── claude/  AnthropicMessagesClient + ClaudeChat + ClaudePesquisaWeb
+│   ├── gemini/  GeminiClient + GeminiChat + GeminiPesquisaWeb (Google Search grounding)
+│   └── ollama/  OllamaChat (local, /api/chat)
 ├── imagem/      ImageProcessingService + ImageStorage (interface) / DiskImageStorage
 │                + ImageDownloadService
 ├── bling/       BlingAuthService (OAuth + refresh) + BlingProductClient (criar/buscar/atualizar)

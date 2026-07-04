@@ -1,4 +1,4 @@
-package com.loja.catalogbling.claude;
+package com.loja.catalogbling.ia;
 
 final class RespostaJson {
 

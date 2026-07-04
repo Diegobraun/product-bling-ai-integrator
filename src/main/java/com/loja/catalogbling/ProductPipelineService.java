@@ -1,10 +1,10 @@
 package com.loja.catalogbling;
 
 import com.loja.catalogbling.bling.BlingProductClient;
-import com.loja.catalogbling.claude.ClaudeContentService;
-import com.loja.catalogbling.claude.ClaudeContentService.ConteudoGerado;
-import com.loja.catalogbling.claude.ProductResearchService;
-import com.loja.catalogbling.claude.ProductResearchService.Pesquisa;
+import com.loja.catalogbling.ia.ConteudoGerado;
+import com.loja.catalogbling.ia.ConteudoIaService;
+import com.loja.catalogbling.ia.PesquisaDeProduto;
+import com.loja.catalogbling.ia.PesquisaProdutoIaService;
 import com.loja.catalogbling.domain.Product;
 import com.loja.catalogbling.domain.ProductStatus;
 import com.loja.catalogbling.imagem.ImageDownloadService;
@@ -21,16 +21,16 @@ import java.util.Base64;
 public class ProductPipelineService {
 
     private final ProductRepository repo;
-    private final ClaudeContentService conteudo;
-    private final ProductResearchService pesquisa;
+    private final ConteudoIaService conteudo;
+    private final PesquisaProdutoIaService pesquisa;
     private final ImageProcessingService processamento;
     private final ImageStorage storage;
     private final ImageDownloadService downloads;
     private final BlingProductClient bling;
 
     public ProductPipelineService(ProductRepository repo,
-                                  ClaudeContentService conteudo,
-                                  ProductResearchService pesquisa,
+                                  ConteudoIaService conteudo,
+                                  PesquisaProdutoIaService pesquisa,
                                   ImageProcessingService processamento,
                                   ImageStorage storage,
                                   ImageDownloadService downloads,
@@ -136,7 +136,7 @@ public class ProductPipelineService {
         repo.save(produto);
     }
 
-    private void aplicarPesquisa(Product produto, Pesquisa resultado) {
+    private void aplicarPesquisa(Product produto, PesquisaDeProduto resultado) {
         if (resultado.dadosBrutos() != null) {
             produto.setDadosBrutos(resultado.dadosBrutos());
         }

@@ -1,8 +1,8 @@
-package com.loja.catalogbling.claude;
+package com.loja.catalogbling.ia.claude;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.loja.catalogbling.config.AnthropicProperties;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import com.loja.catalogbling.ia.IaHttp;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -13,18 +13,12 @@ public class AnthropicMessagesClient {
 
     private static final String ENDPOINT = "https://api.anthropic.com/v1/messages";
     private static final String VERSAO_API = "2023-06-01";
-    private static final int TIMEOUT_CONEXAO_MS = 15_000;
-    private static final int TIMEOUT_LEITURA_MS = 300_000;
 
-    private final RestClient http;
+    private final RestClient http = IaHttp.clientePadrao();
     private final AnthropicProperties props;
 
     public AnthropicMessagesClient(AnthropicProperties props) {
         this.props = props;
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(TIMEOUT_CONEXAO_MS);
-        factory.setReadTimeout(TIMEOUT_LEITURA_MS);
-        this.http = RestClient.builder().requestFactory(factory).build();
     }
 
     public String modelo() {
