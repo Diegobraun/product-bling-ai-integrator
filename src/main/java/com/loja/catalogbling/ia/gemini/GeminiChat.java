@@ -35,7 +35,9 @@ public class GeminiChat implements ChatIa {
         Map<String, Object> corpo = Map.of(
                 "system_instruction", Map.of("parts", List.of(Map.of("text", system))),
                 "contents", contents,
-                "generation_config", Map.of("max_output_tokens", maxTokens));
+                "generation_config", Map.of(
+                        "max_output_tokens", maxTokens,
+                        "thinking_config", Map.of("thinking_budget", 0)));
         return api.extrairTexto(api.gerarConteudo(corpo));
     }
 
