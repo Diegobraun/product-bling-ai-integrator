@@ -55,7 +55,17 @@ public class ImageDownloadService {
             Pattern.compile("https://http2\\.mlstatic\\.com/D_[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
             Pattern.compile("https://m\\.media-amazon\\.com/images/I/[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
             Pattern.compile("https://[\\w.\\-]*mlcdn\\.com\\.br/[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
-            Pattern.compile("https?://[\\w.\\-]+/[^\"'\\s\\\\]*,[^\"'\\s\\\\]*\\.(?:jpe?g|png|webp)")
+            Pattern.compile("https?://[\\w.\\-]+/[^\"'\\s\\\\]*,[^\"'\\s\\\\]*\\.(?:jpe?g|png|webp)"),
+            Pattern.compile("https?://[^\"'\\s\\\\]+?/image/upload/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://res\\.cloudinary\\.com/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://[\\w.\\-]+/arquivos/ids/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://[\\w.\\-]*vtexassets\\.com/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://images\\.ctfassets\\.net/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://[\\w.\\-]+\\.imgix\\.net/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://[\\w.\\-]+\\.sirv\\.com/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://images\\.salsify\\.com/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://[\\w.\\-]+\\.(?:widen\\.net|bynder\\.com)/[^\"'\\s\\\\)?]+"),
+            Pattern.compile("https?://[\\w.\\-]*(?:img|image|media|cdn|static|assets|photo|resource|dam)[\\w.\\-]*/[^\"'\\s\\\\)]+?\\.(?:jpe?g|png|webp)[^\"'\\s\\\\)]*")
     };
 
     private static final Pattern JSONLD_IMAGE_ARRAY =
@@ -164,7 +174,8 @@ public class ImageDownloadService {
 
     private static final String[] LIXO = {
             "navigation", "logo", "favicon", "sprite", "og-image", "og_image", "icon", "placeholder",
-            "gnb", "/menu"
+            "gnb", "/menu", "swatch", "spinner", "/ads/", "doubleclick", "criteo",
+            "googlesyndication", "adservice", "taboola", "outbrain", "adnxs"
     };
 
     private List<String> filtrarCor(List<String> urls, Set<String> coresExcluir) {
