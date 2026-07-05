@@ -9,16 +9,54 @@
 
     <form method="post" th:action="@{/produtos/pesquisar}" class="card" onsubmit="this.querySelector('button').disabled=true; document.getElementById('ind-pesq').style.display='inline'">
         <h2>Só o nome (pesquisa automática)</h2>
-        <label>Nome do produto *</label>
+        <label>Nome do produto ou link *</label>
         <input type="text" name="nome" required
-               placeholder="Ex.: PCCom Imperial AMD Ryzen 7 9800X3D / 32 GB / SSD de 2 TB / RTX 5070 V3 / Windows 11 Home">
+               placeholder="Ex.: Mouse Logitech M170  —  ou cole um link da página do produto">
+        <p class="muted" style="margin-top:4px">
+            Você pode digitar o nome do produto ou colar um link direto (fabricante, fornecedor ou marketplace).
+        </p>
+
+        <details class="opcionais">
+            <summary>Campos opcionais (ajudam a pesquisa a acertar o produto)</summary>
+            <div class="grid-2">
+                <div>
+                    <label>Tipo de produto</label>
+                    <input type="text" name="tipo" placeholder="Ex.: mouse">
+                </div>
+                <div>
+                    <label>Marca</label>
+                    <input type="text" name="marca" placeholder="Ex.: Logitech">
+                </div>
+                <div>
+                    <label>Modelo</label>
+                    <input type="text" name="modelo" placeholder="Ex.: K270">
+                </div>
+                <div>
+                    <label>EAN / GTIN</label>
+                    <input type="text" name="ean" placeholder="Ex.: 097855074447">
+                </div>
+                <div>
+                    <label>SKU</label>
+                    <input type="text" name="sku" placeholder="Ex.: LOG-K270">
+                </div>
+                <div>
+                    <label>Fornecedor</label>
+                    <input type="text" name="fornecedor" placeholder="Ex.: Pauta Distribuição">
+                </div>
+                <div>
+                    <label>Fabricante</label>
+                    <input type="text" name="fabricante" placeholder="Ex.: Logitech">
+                </div>
+            </div>
+        </details>
+
         <div class="acoes">
             <button type="submit" class="btn btn-primary">Pesquisar e criar</button>
             <span id="ind-pesq" class="spinner" style="display:none">pesquisando specs e imagens na web… isso pode levar alguns minutos</span>
         </div>
         <p class="muted" style="margin-top:10px">
-            O Claude busca a ficha técnica e as imagens do produto em vários sites,
-            baixa a melhor imagem e já aplica o tratamento (1024×1024, ≤200 KB).
+            O Claude busca a ficha técnica e várias imagens do produto (priorizando fabricante e fornecedor),
+            baixa as melhores e já aplica o tratamento (1024×1024, fundo branco, margem de respiro, ≤200 KB).
         </p>
     </form>
 
@@ -47,12 +85,12 @@
                 <input type="text" name="ean" placeholder="Ex.: 6935364088231">
             </div>
             <div>
-                <label>Preço (R$)</label>
-                <input type="text" name="preco" placeholder="Ex.: 89,90">
+                <label>SKU</label>
+                <input type="text" name="sku" placeholder="Ex.: TPL-T2U-NANO">
             </div>
             <div>
-                <label>Imagem do produto (opcional agora)</label>
-                <input type="file" name="imagem" accept="image/*">
+                <label>Imagens do produto (pode selecionar várias)</label>
+                <input type="file" name="imagens" accept="image/*" multiple>
             </div>
         </div>
 

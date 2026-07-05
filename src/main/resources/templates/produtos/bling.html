@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragmentos/base :: head('Produtos do Bling')}"></head>
+<body>
+<header th:replace="~{fragmentos/base :: topbar(${blingConectado})}"></header>
+
+<div class="container">
+    <h1>Produtos do Bling</h1>
+    <p class="muted">
+        Produtos já cadastrados no Bling. Importe um para revisar o conteúdo e as imagens
+        e depois atualizá-lo (PUT) no Bling.
+    </p>
+
+    <div th:unless="${blingConectado}" class="card">
+        <strong>Bling não conectado.</strong>
+        <a href="/bling/conectar" class="btn" style="margin-left:8px">Conectar Bling</a>
+    </div>
+
+    <div th:if="${blingConectado and #lists.isEmpty(itens)}" class="card muted">
+        Nenhum produto encontrado nesta página.
+    </div>
+
+    <table th:if="${blingConectado and !#lists.isEmpty(itens)}">
+        <thead>
+        <tr>
+            <th>ID Bling</th>
+            <th>Nome</th>
+            <th>Código / SKU</th>
+            <th>GTIN</th>
+            <th>Preço</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${itens}">
+            <td th:text="${item.id}">1</td>
+            <td th:text="${item.nome}">Nome</td>
+            <td th:text="${item.codigo}">SKU</td>
+            <td th:text="${item.gtin}">GTIN</td>
+            <td th:text="${item.preco}">0,00</td>
+            <td>
+                <form method="post" th:action="@{/produtos/bling/importar}">
+                    <input type="hidden" name="blingId" th:value="${item.id}">
+                    <button type="submit" class="btn btn-primary btn-sm">Importar para revisão</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="acoes" th:if="${blingConectado}">
+        <a th:if="${pagina > 1}" class="btn" th:href="@{/produtos/bling(pagina=${pagina - 1})}">← Anterior</a>
+        <span class="muted">Página <span th:text="${pagina}">1</span></span>
+        <a th:if="${!#lists.isEmpty(itens)}" class="btn" th:href="@{/produtos/bling(pagina=${pagina + 1})}">Próxima →</a>
+    </div>
+</div>
+</body>
+</html>

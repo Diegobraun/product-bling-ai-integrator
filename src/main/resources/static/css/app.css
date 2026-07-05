@@ -91,3 +91,11 @@ tr:last-child td { border-bottom: none; }
 .rendered { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: #fbfbfc; font-size: 14px; }
 .alerta { padding: 10px 14px; border-radius: 8px; background: var(--danger-bg); color: var(--danger); font-size: 13px; margin-bottom: 12px; }
 .acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+.btn-sm { padding: 5px 10px; font-size: 12px; margin-top: 8px; }
+.galeria { display: flex; flex-wrap: wrap; gap: 14px; }
+.galeria-item { width: 170px; }
+.img-thumb { width: 170px; height: 170px; object-fit: contain; background: #fff; }
+details.opcionais { margin: 6px 0 4px; }
+details.opcionais summary { cursor: pointer; font-size: 13px; color: var(--primary); }
+details.opcionais[open] summary { margin-bottom: 8px; }

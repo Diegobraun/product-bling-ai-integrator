@@ -9,7 +9,7 @@
         <h1 style="margin:0">Produto #<span th:text="${p.id}">1</span></h1>
         <span class="pill" th:classappend="'status-' + ${p.status}" th:text="${p.status.rotulo}">Status</span>
     </div>
-    <p class="muted" th:text="${p.marca} + ' · ' + ${p.modelo} + ' · ' + ${p.categoria}">marca · modelo</p>
+    <p class="muted" th:text="${p.resumo}">marca · modelo</p>
 
     <div class="grid-2">
         <!-- Coluna esquerda: entrada + imagem -->

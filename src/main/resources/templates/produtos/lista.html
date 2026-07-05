@@ -34,8 +34,9 @@
                       th:text="${p.status.rotulo}">Status</span>
             </td>
             <td>
-                <span th:if="${p.imagemUrlPublica != null}" class="pill pill-ok" th:text="${p.imagemKb} + ' KB'">200 KB</span>
-                <span th:unless="${p.imagemUrlPublica != null}" class="muted">—</span>
+                <span th:if="${!#lists.isEmpty(p.imagens)}" class="pill pill-ok"
+                      th:text="${#lists.size(p.imagens)} + (${#lists.size(p.imagens)} == 1 ? ' img' : ' imgs')">1 img</span>
+                <span th:unless="${!#lists.isEmpty(p.imagens)}" class="muted">—</span>
             </td>
         </tr>
         </tbody>

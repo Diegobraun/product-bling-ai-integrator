@@ -38,8 +38,8 @@
               hx-target="#painel-conteudo" hx-swap="outerHTML">
             <h2>Conteúdo (você pode editar direto)</h2>
 
-            <label>Título (SEO: tipo + marca + modelo + características)</label>
-            <input type="text" name="titulo" th:value="${p.titulo}">
+            <label>Título do produto <span class="muted">(SEO: tipo + marca + modelo + características)</span></label>
+            <input type="text" name="titulo" th:value="${p.titulo}" placeholder="Ex.: Mouse sem fio Logitech M170 preto 1000 DPI USB">
 
             <label>Descrição curta (resumida)</label>
             <textarea name="descricaoCurta" rows="4" th:text="${p.descricaoCurta}"></textarea>
