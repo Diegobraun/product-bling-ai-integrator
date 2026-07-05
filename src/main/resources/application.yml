@@ -2,6 +2,9 @@ spring:
   application:
     name: catalog-bling-ia-integration
 
+  config:
+    import: "optional:file:./application-local.yml"
+
   datasource:
     url: jdbc:h2:file:./dados/catalogo;AUTO_SERVER=TRUE
     username: sa

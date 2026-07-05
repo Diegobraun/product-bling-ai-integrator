@@ -5,3 +5,7 @@ dados/
 *.iml
 .DS_Store
 .claude/
+
+# Configuração local (segredos) — nunca commitar
+application-local.yml
+application-local.yaml
