@@ -16,12 +16,12 @@ O provedor de IA é **configurável** (Gemini, Claude ou Ollama). O padrão é o
 - **Pesquisa por nome ou link**, com campos opcionais (tipo, marca, modelo,
   EAN/GTIN, SKU, fornecedor, fabricante) que orientam a busca a priorizar o site
   do fabricante e do fornecedor.
-- **Imagens múltiplas** colhidas de marketplaces BR (Kabum) e das páginas
-  citadas na pesquisa, priorizando a **cor** informada, e tratadas em 1024×1024
-  (fundo branco, margem de respiro, ≤200 KB).
-- **Verificação por visão**: cada imagem é conferida pela IA e descartada se for
-  de outro produto, cor errada ou banner/arte promocional — só entram fotos
-  limpas do produto.
+- **Imagens múltiplas** colhidas de marketplaces (Kabum), do link que você colar
+  e das páginas citadas — com ampla cobertura de CDNs/DAMs (Scene7, Cloudinary,
+  VTEX etc.), priorizando a **cor** informada, tratadas em 1024×1024 (≤200 KB).
+- **Verificação por visão**: cada imagem é classificada pela IA — foto limpa
+  (com margem), ambientada (cena real, sem margem) ou rejeitada (produto/cor
+  errados, banner ou arte com texto).
 - **Bling**: cria o produto, ou **atualiza** (PUT) se ele já existir (por
   GTIN/nome/id); também **lista e importa** produtos já cadastrados no Bling
   para revisar e atualizar.
@@ -194,20 +194,30 @@ sequenceDiagram
 
 ## Imagens
 
-- **Fontes**: busca direta na **Kabum** por marca+modelo(+cor), mais as páginas
-  de produto que a pesquisa web citar (Mercado Livre, Pichau etc., quando
-  acessíveis). De cada página, colhe a galeria inteira (og:image, JSON-LD e CDNs
-  dos marketplaces) e sobe para a maior resolução disponível.
-- **Cor**: se você informar a cor no nome, ela é traduzida (rose→rosa,
-  black→preto, ...) e priorizada na busca; a verificação também passa a exigir
-  a cor. Sem cor informada, aceita qualquer cor do produto correto.
-- **Tratamento**: 1024×1024 em canvas branco, produto centralizado com margem de
-  180px de respiro, compressão binária de qualidade JPEG até ≤200 KB.
-- **Verificação por visão**: cada imagem baixada é enviada à IA (numa cadeia de
-  modelos dedicada — veja abaixo) e **descartada** se for de outro produto, cor
-  claramente diferente, ou banner/arte promocional/cena lifestyle/texto
-  sobreposto. Só foto limpa do produto entra no catálogo.
+- **Fontes**: busca direta na **Kabum** por marca+modelo(+cor); se você colar um
+  **link**, a página dele é aberta e a galeria colhida; e as páginas que a
+  pesquisa web citar. A extração é ampla — og:image, JSON-LD e os principais
+  CDNs/DAMs de e-commerce e fabricantes: **Scene7** (Samsung), **Cloudinary**
+  (Logitech), **VTEX**, **Contentful**, **imgix**, além de Kabum, Mercado Livre,
+  Amazon e Magalu — sempre na maior resolução disponível.
+- **Cor**: se você informar a cor (no nome), ela é traduzida (rose→rosa,
+  black→preto, ...) e priorizada — a busca e a extração pulam as outras cores e a
+  verificação passa a exigir a cor. Sem cor informada, aceita qualquer cor do
+  produto correto.
+- **Verificação por visão**: cada imagem é enviada à IA (numa cadeia de modelos
+  dedicada — veja abaixo) e classificada em:
+  - **limpa** — produto sozinho, fundo neutro → entra **com** a margem de respiro;
+  - **ambientada** — produto numa cena real, sem texto → entra **sem** margem
+    (enquadramento cheio);
+  - **rejeitar** — outro produto, cor errada, banner/arte com texto, logo ou
+    colagem → descartada.
+- **Tratamento**: 1024×1024 em canvas branco (margem de 180px só nas "limpas"),
+  compressão binária de qualidade JPEG até ≤200 KB. PNG transparente (ex.: fotos
+  oficiais de fabricante) fica com fundo branco.
 - **Uploads manuais não passam pela verificação** (a foto é sua escolha).
+- **Limitações**: páginas 100% renderizadas por JavaScript (galeria dinâmica) e
+  sites com bloqueio anti-bot (ex.: Cloudflare) não são raspáveis — nesses casos,
+  use um link de outra fonte ou o upload manual.
 
 ## Provedores de IA (Gemini, Claude, Ollama)
 
