@@ -97,14 +97,18 @@ public final class ProductPrompts {
           própria imagem — .jpg/.jpeg/.png/.webp). Prefira o CDN oficial do fabricante
           (ex.: resource.logitech.com) e os CDNs das lojas. NÃO invente URLs de imagem.
         - Páginas de produto (campo "paginas"): este é o caminho MAIS IMPORTANTE para a
-          imagem, porque o sistema extrai as fotos dessas páginas. Liste as URLs das
-          PÁGINAS DE PRODUTO (não de busca) onde o produto aparece, NESTA PRIORIDADE:
-          1) Kabum, 2) Mercado Livre (produto.mercadolivre.com.br / /p/MLB...),
-          3) Pichau. Se não achar nessas, use outras lojas brasileiras acessíveis
-          (Magazine Luiza, Terabyte, Amazon.com.br) e a página oficial do fabricante no
-          Brasil. EVITE varejo dos EUA/Europa (Walmart, B&H, Microcenter, Staples, Best
-          Buy) — eles bloqueiam a extração automática. Liste de 3 a 6 páginas,
-          priorizando o fornecedor e o fabricante informados.
+          imagem, porque o sistema extrai as fotos dessas páginas por download direto do
+          HTML (SEM navegador, SEM execução de JavaScript). Por isso, só valem páginas que
+          entregam as fotos já no HTML. Liste as URLs das PÁGINAS DE PRODUTO (não de
+          busca), NESTA PRIORIDADE:
+          1) Kabum (a fonte de imagem mais confiável — priorize sempre).
+          2) Página OFICIAL do fabricante no Brasil (bom para fotos limpas em alta).
+          3) Outras lojas com HTML estático (Terabyte, Pichau — quando acessíveis).
+          ATENÇÃO: Mercado Livre e Amazon.com.br quase NUNCA entregam as fotos no HTML
+          (usam interstício anti-robô ou galeria em JavaScript), então NÃO os liste em
+          "paginas" esperando imagem — use-os apenas para a ficha técnica em "dadosBrutos".
+          EVITE varejo dos EUA/Europa (Walmart, B&H, Microcenter, Staples, Best Buy) —
+          bloqueiam a extração. Liste de 3 a 6 páginas, priorizando Kabum e o fabricante.
 
         Regras:
         - NÃO invente especificações: inclua apenas o que encontrou nas fontes.

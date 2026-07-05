@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 @Service
 public class ImageDownloadService {
 
-    private static final int LADO_MINIMO = 350;
+    private static final int LADO_MINIMO = 400;
     private static final int MAX_BYTES = 20 * 1024 * 1024;
     private static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -65,7 +65,8 @@ public class ImageDownloadService {
             Pattern.compile("https?://[\\w.\\-]+\\.sirv\\.com/[^\"'\\s\\\\)?]+"),
             Pattern.compile("https?://images\\.salsify\\.com/[^\"'\\s\\\\)?]+"),
             Pattern.compile("https?://[\\w.\\-]+\\.(?:widen\\.net|bynder\\.com)/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://[\\w.\\-]*(?:img|image|media|cdn|static|assets|photo|resource|dam)[\\w.\\-]*/[^\"'\\s\\\\)]+?\\.(?:jpe?g|png|webp)[^\"'\\s\\\\)]*")
+            Pattern.compile("https?://[\\w.\\-]*(?:img|image|media|cdn|static|assets|photo|resource|dam)[\\w.\\-]*/[^\"'\\s\\\\)]+?\\.(?:jpe?g|png|webp)[^\"'\\s\\\\)]*"),
+            Pattern.compile("https?://[\\w.\\-]+/[^\"'\\s\\\\)]*[-/](?:gallery|feature|product)[-/][^\"'\\s\\\\)]*\\.(?:jpe?g|png|webp)[^\"'\\s\\\\)]*")
     };
 
     private static final Pattern JSONLD_IMAGE_ARRAY =
@@ -175,7 +176,8 @@ public class ImageDownloadService {
     private static final String[] LIXO = {
             "navigation", "logo", "favicon", "sprite", "og-image", "og_image", "icon", "placeholder",
             "gnb", "/menu", "swatch", "spinner", "/ads/", "doubleclick", "criteo",
-            "googlesyndication", "adservice", "taboola", "outbrain", "adnxs"
+            "googlesyndication", "adservice", "taboola", "outbrain", "adnxs",
+            "banner", "/conteudo/"
     };
 
     private List<String> filtrarCor(List<String> urls, Set<String> coresExcluir) {
