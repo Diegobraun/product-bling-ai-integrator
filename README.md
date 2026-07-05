@@ -28,6 +28,70 @@ O provedor de IA é **configurável** (Gemini, Claude ou Ollama). O padrão é o
 - **Fallback de modelos Gemini** por cota: quando um modelo bate no limite
   diário, cai automaticamente para o próximo.
 
+## Arquitetura
+
+Organização por **contextos DDD** (catalogo, ia, bling, imagem), cada um em
+camadas `domain` / `application` / `infrastructure` / `web`. Os subdomínios de
+IA e imagem seguem **portas & adaptadores** (hexagonal): a lógica depende de
+uma *porta* (interface no `domain`) e os provedores concretos ficam na
+`infrastructure`, plugáveis por configuração.
+
+```mermaid
+flowchart LR
+    Browser["Navegador<br/>Thymeleaf + htmx"] --> Ctrl
+
+    subgraph Catalogo["catalogo — dominio central"]
+        direction TB
+        Ctrl["web<br/>ProductController"] --> Pipe["application<br/>ProductPipelineService<br/>orquestra + maquina de estados"]
+        Pipe --> Dom["domain<br/>Product / ProductImage<br/>ProductStatus / ProductRepository"]
+    end
+
+    Pipe --> IAapp["ia.application<br/>Conteudo / Pesquisa / Verificacao"]
+    Pipe --> IMGapp["imagem.application<br/>Processing / Download"]
+    Pipe --> Bling["bling.infrastructure<br/>Auth + ProductClient"]
+
+    IAapp --> IAport["ia.domain (portas)<br/>ChatIa / PesquisaWebIa"]
+    IAadapt["ia.infrastructure<br/>gemini / claude / ollama"] -. implementa .-> IAport
+    IMGapp --> IMGport["imagem.domain (porta)<br/>ImageStorage"]
+    IMGadapt["imagem.infrastructure<br/>DiskImageStorage"] -. implementa .-> IMGport
+
+    IAadapt --> ExtIA[["Gemini / Claude / Ollama"]]
+    IMGapp --> ExtMk[["Kabum / marketplaces"]]
+    Bling --> ExtBl[["Bling v3 API"]]
+    Dom --> ExtDb[("H2 / PostgreSQL")]
+```
+
+- **catalogo** é o núcleo: o `ProductPipelineService` (application) é o único que
+  conhece o fluxo inteiro e a máquina de estados; o `Product` (aggregate) e o
+  `ProductRepository` (porta) vivem no `domain`.
+- **ia** e **imagem** expõem portas (`ChatIa`, `PesquisaWebIa`, `ImageStorage`)
+  implementadas por adaptadores trocáveis. Isso permite trocar Gemini↔Claude↔
+  Ollama, ou disco↔bucket, sem tocar na lógica.
+- **bling** é a camada anticorrupção do ERP (OAuth + client REST).
+
+### Ciclo de vida do produto (máquina de estados)
+
+Só produtos **aprovados** chegam ao Bling (o portão de revisão humana). As
+transições válidas são impostas no enum `ProductStatus`.
+
+```mermaid
+stateDiagram-v2
+    [*] --> RASCUNHO
+    RASCUNHO --> GERADO: gerar conteudo
+    GERADO --> EM_REVISAO: revisar
+    GERADO --> APROVADO: aprovar
+    EM_REVISAO --> EM_REVISAO: pedir ajuste
+    EM_REVISAO --> APROVADO: aprovar
+    EM_REVISAO --> GERADO
+    APROVADO --> PUBLICADO: publicar no Bling
+    APROVADO --> ERRO_PUBLICACAO: falha
+    PUBLICADO --> PUBLICADO: atualizar no Bling
+    PUBLICADO --> EM_REVISAO: editar
+    ERRO_PUBLICACAO --> APROVADO
+    ERRO_PUBLICACAO --> PUBLICADO
+    ERRO_PUBLICACAO --> EM_REVISAO
+```
+
 ## Como rodar
 
 Pré-requisitos: **JDK 21** e **Maven**.
@@ -103,6 +167,30 @@ spring:
    têm o botão **Atualizar no Bling** para reenviar edições.
 7. **Produtos do Bling** (topo) — lista os produtos já cadastrados no Bling e
    permite **importar** um para a revisão, ajustar conteúdo/imagens e atualizá-lo.
+
+### Pesquisa automática, passo a passo
+
+```mermaid
+sequenceDiagram
+    actor U as Usuário
+    participant P as ProductPipelineService
+    participant R as Pesquisa web
+    participant K as Marketplaces
+    participant V as Verificacao
+    participant DB as Banco
+
+    U->>P: nome + hints (tipo, marca, cor...)
+    P->>R: pesquisar ficha técnica + páginas
+    R-->>P: specs + páginas (fallback de modelo se 429/503)
+    P->>K: busca por marca+modelo+cor, colhe galerias
+    K-->>P: imagens candidatas
+    loop cada imagem
+        P->>V: é o produto certo, foto limpa?
+        V-->>P: sim / não (banner, cor, outro produto)
+    end
+    P->>DB: salva produto + só as imagens aprovadas
+    P-->>U: tela de revisão
+```
 
 ## Imagens
 
@@ -184,10 +272,7 @@ treinamento — irrelevante para ficha técnica de produto, mas fique ciente.
 - **Segredos**: nunca commite chaves. Use o `application-local.yml` (git-ignorado)
   ou variáveis de ambiente.
 
-## Estrutura
-
-Organização por **contextos DDD**, cada um em camadas (`domain` / `application`
-/ `infrastructure` / `web`):
+## Estrutura de pacotes
 
 ```
 com.loja.catalogbling
@@ -209,7 +294,3 @@ com.loja.catalogbling
 │   └── infrastructure/ DiskImageStorage
 └── config/            @ConfigurationProperties (anthropic, gemini, ollama, bling, app)
 ```
-
-Máquina de estados do produto:
-`RASCUNHO → GERADO → EM_REVISAO ⟳ → APROVADO → PUBLICADO` (+ `ERRO_PUBLICACAO`;
-`PUBLICADO` pode voltar a `EM_REVISAO` ou republicar para atualizar o Bling).
