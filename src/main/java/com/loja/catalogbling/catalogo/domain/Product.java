@@ -72,6 +72,12 @@ public class Product {
         return this.imagens.removeIf(img -> imagemId.equals(img.getId()));
     }
 
+    public String getResumo() {
+        return java.util.stream.Stream.of(marca, modelo)
+                .filter(v -> v != null && !v.isBlank())
+                .collect(java.util.stream.Collectors.joining(" · "));
+    }
+
     public ProductImage getImagemPrincipal() {
         return imagens.isEmpty() ? null : imagens.get(0);
     }
