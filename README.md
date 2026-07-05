@@ -2,30 +2,62 @@
 
 Pipeline de cadastro de produtos para e-commerce: pesquisa com IA + Bling.
 
-Dashboard web em Spring Boot que gera título, descrição curta e descrição
-complementar de produtos com o Claude (seguindo seus templates + SEO), processa
-a imagem (1024×1024, ≤200 KB) e publica no Bling v3 — com um ciclo de revisão
-humano no meio: você edita o texto e/ou pede ajustes ao Claude antes de publicar.
+Dashboard web em Spring Boot que, a partir do **nome de um produto** (ou de um
+link), pesquisa a ficha técnica e as imagens na web, gera título e descrições
+seguindo templates + SEO, trata as imagens e publica no Bling v3 — com um ciclo
+de **revisão humana** no meio: você edita o texto e/ou pede ajustes à IA antes
+de publicar.
 
-Você pode partir só do **nome do produto**: o Claude pesquisa a ficha técnica e
-as imagens na web (web search), baixa a melhor imagem e aplica o tratamento.
-Na publicação, se o produto já existir no Bling (mesmo GTIN ou nome), ele é
-**atualizado** (PUT) em vez de duplicado.
+O provedor de IA é **configurável** (Gemini, Claude ou Ollama). O padrão é o
+**Gemini** (free tier), então dá para rodar sem custo.
+
+### Destaques
+
+- **Pesquisa por nome ou link**, com campos opcionais (tipo, marca, modelo,
+  EAN/GTIN, SKU, fornecedor, fabricante) que orientam a busca a priorizar o site
+  do fabricante e do fornecedor.
+- **Imagens múltiplas** colhidas de marketplaces BR (Kabum) e das páginas
+  citadas na pesquisa, priorizando a **cor** informada, e tratadas em 1024×1024
+  (fundo branco, margem de respiro, ≤200 KB).
+- **Verificação por visão**: cada imagem é conferida pela IA e descartada se for
+  de outro produto, cor errada ou banner/arte promocional — só entram fotos
+  limpas do produto.
+- **Bling**: cria o produto, ou **atualiza** (PUT) se ele já existir (por
+  GTIN/nome/id); também **lista e importa** produtos já cadastrados no Bling
+  para revisar e atualizar.
+- **Fallback de modelos Gemini** por cota: quando um modelo bate no limite
+  diário, cai automaticamente para o próximo.
 
 ## Como rodar
 
 Pré-requisitos: **JDK 21** e **Maven**.
 
-1. Configure as variáveis de ambiente (ou edite `application.yml`):
+1. Configure os segredos. Duas formas (o arquivo local sobrescreve o
+   `application.yml`):
 
-   ```bash
-   export ANTHROPIC_API_KEY=sk-ant-...   # se usar o provider claude (default)
-   export BLING_CLIENT_ID=seu-client-id
-   export BLING_CLIENT_SECRET=seu-client-secret
-   # URL pública do app — o Bling BAIXA a imagem por ela.
-   # Em dev, suba um túnel (ex.: ngrok http 8080) e use a URL https:
-   export APP_PUBLIC_BASE_URL=https://seu-tunel.ngrok-free.app
-   ```
+   - **Arquivo local (recomendado em dev)** — crie um `application-local.yml` na
+     raiz do projeto (já está no `.gitignore`, não é commitado):
+
+     ```yaml
+     gemini:
+       api-key: sua-chave-do-gemini
+     bling:
+       client-id: seu-client-id
+       client-secret: seu-client-secret
+     ```
+
+   - **Variáveis de ambiente:**
+
+     ```bash
+     export GEMINI_API_KEY=...          # provider padrão (free tier)
+     export BLING_CLIENT_ID=seu-client-id
+     export BLING_CLIENT_SECRET=seu-client-secret
+     # URL pública do app — o Bling BAIXA a imagem por ela.
+     # Em dev, suba um túnel (ex.: ngrok http 8080) e use a URL https:
+     export APP_PUBLIC_BASE_URL=https://seu-tunel.ngrok-free.app
+     ```
+
+   Crie uma chave grátis do Gemini em https://aistudio.google.com.
 
 2. Suba a aplicação:
 
@@ -50,53 +82,95 @@ spring:
 ## Fluxo no dashboard
 
 1. **+ Novo produto** — duas opções:
-   - **Só o nome**: digite o nome (ex.: `PCCom Imperial AMD Ryzen 7 9800X3D /
-     32 GB / SSD de 2 TB / RTX 5070 V3 / Windows 11 Home`) e o Claude pesquisa
-     specs, marca, modelo, categoria, EAN e imagens em vários sites, baixa a
-     melhor imagem e já processa. Pode levar alguns minutos.
+   - **Só o nome (pesquisa automática)**: digite o nome ou cole um link do
+     produto (ex.: `mouse logitech pebble 2 m350s rose`). Campos opcionais
+     (tipo, marca, modelo, EAN/GTIN, SKU, fornecedor, fabricante) ajudam a IA a
+     achar o produto certo e a priorizar o fabricante/fornecedor. A IA levanta a
+     ficha técnica e o sistema baixa e trata **várias imagens**. Pode levar
+     alguns minutos.
    - **Manual**: cole os dados brutos do fornecedor, marca, modelo, categoria,
-     EAN, preço e (opcional) a imagem.
-2. Na tela do produto, **Processar imagem** deixa a foto em 1024×1024 e ≤200 KB,
-   e mostra uma nota de nitidez.
-3. **Gerar com o Claude** cria os três textos seguindo os templates e o SEO.
-4. **Revise**: edite os campos direto, ou peça ajustes no chat
-   ("deixe o título mais curto", "destaque o Dual Band"). O Claude mantém o
-   contexto da conversa.
+     EAN, SKU e (opcional) as imagens (pode subir várias).
+2. Na tela do produto, o bloco **Imagem** mostra a galeria; dá para **adicionar
+   mais** imagens (upload múltiplo) e **remover** as que não quiser.
+3. **Gerar** cria título, descrição curta e complementar seguindo os templates
+   e o SEO, e avalia a imagem principal.
+4. **Revise**: edite os campos direto (incluindo o **título do produto**), ou
+   peça ajustes no chat ("deixe o título mais curto", "destaque o Silent
+   Touch"). A IA mantém o contexto da conversa.
 5. **Aprovar** libera a publicação. **Conectar Bling** (topo) faz o OAuth uma vez.
 6. **Publicar no Bling** — se o produto já existir lá (id salvo, ou encontrado
    por GTIN/nome), atualiza via PUT; senão cria via POST. Produtos publicados
    têm o botão **Atualizar no Bling** para reenviar edições.
+7. **Produtos do Bling** (topo) — lista os produtos já cadastrados no Bling e
+   permite **importar** um para a revisão, ajustar conteúdo/imagens e atualizá-lo.
 
-## Provedores de IA (Claude, Gemini, Ollama)
+## Imagens
+
+- **Fontes**: busca direta na **Kabum** por marca+modelo(+cor), mais as páginas
+  de produto que a pesquisa web citar (Mercado Livre, Pichau etc., quando
+  acessíveis). De cada página, colhe a galeria inteira (og:image, JSON-LD e CDNs
+  dos marketplaces) e sobe para a maior resolução disponível.
+- **Cor**: se você informar a cor no nome, ela é traduzida (rose→rosa,
+  black→preto, ...) e priorizada na busca; a verificação também passa a exigir
+  a cor. Sem cor informada, aceita qualquer cor do produto correto.
+- **Tratamento**: 1024×1024 em canvas branco, produto centralizado com margem de
+  180px de respiro, compressão binária de qualidade JPEG até ≤200 KB.
+- **Verificação por visão**: cada imagem baixada é enviada à IA (numa cadeia de
+  modelos dedicada — veja abaixo) e **descartada** se for de outro produto, cor
+  claramente diferente, ou banner/arte promocional/cena lifestyle/texto
+  sobreposto. Só foto limpa do produto entra no catálogo.
+- **Uploads manuais não passam pela verificação** (a foto é sua escolha).
+
+## Provedores de IA (Gemini, Claude, Ollama)
 
 O provedor é escolhido no `application.yml` (ou por env), separadamente para a
 geração de conteúdo e para a pesquisa web:
 
 ```yaml
 ia:
-  provider: claude           # claude | gemini | ollama   (geração de conteúdo)
-  pesquisa-provider: claude  # claude | gemini            (pesquisa web)
+  provider: gemini           # gemini | claude | ollama   (geração de conteúdo + visão)
+  pesquisa-provider: gemini  # gemini | claude            (pesquisa web)
 ```
 
 | Provedor | Custo | Geração + visão | Pesquisa web | Configuração |
 |---|---|---|---|---|
-| **claude** (default) | pago (centavos/cadastro) | ✅ melhor escrita pt-BR | ✅ web search | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-sonnet-4-6`) |
-| **gemini** | **free tier** | ✅ | ✅ Google Search grounding | `GEMINI_API_KEY` (crie grátis em https://aistudio.google.com), `GEMINI_MODEL` (default `gemini-2.5-flash`) |
-| **ollama** | **grátis, 100% local** | ✅ (modelo multimodal) | ❌ não tem — use claude ou gemini na pesquisa | `ollama pull gemma3`; `OLLAMA_BASE_URL` (default `http://localhost:11434`), `OLLAMA_MODEL` (default `gemma3`) |
+| **gemini** (default) | **free tier** | ✅ | ✅ Google Search grounding | `GEMINI_API_KEY` (grátis em https://aistudio.google.com), `GEMINI_MODEL` |
+| **claude** | pago (centavos/cadastro) | ✅ melhor escrita pt-BR | ✅ web search | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` |
+| **ollama** | **grátis, 100% local** | ✅ (modelo multimodal) | ❌ não tem — use gemini ou claude na pesquisa | `ollama pull gemma3`; `OLLAMA_BASE_URL`, `OLLAMA_MODEL` |
 
-Setup 100% free: `IA_PROVIDER=gemini IA_PESQUISA_PROVIDER=gemini`.
-Low cost máximo (geração local): `IA_PROVIDER=ollama IA_PESQUISA_PROVIDER=gemini`.
+### Fallback e cota (Gemini)
+
+O free tier do Gemini limita **requisições por dia (RPD)** por modelo — a maioria
+dos flash é ~20/dia, mas o `gemini-3.1-flash-lite` é ~500/dia. Como a
+**verificação de imagem** é o que mais gasta requisições (uma por foto), ela roda
+numa **cadeia de modelos separada**, deixando os modelos "bons" (baixo volume,
+alta qualidade) para a pesquisa e a geração de texto:
+
+```yaml
+gemini:
+  model: gemini-3.5-flash
+  # pesquisa + geração de texto: tenta em ordem quando um modelo dá 429/503/500/404
+  fallback-models: gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-flash-lite-latest,gemini-3-flash-preview,gemini-2.5-flash
+  # verificação de imagem (alto volume): usa o modelo de maior cota diária primeiro
+  verificacao-models: gemini-3.1-flash-lite,gemini-2.5-flash-lite,gemini-flash-lite-latest
+```
 
 Atenção: no free tier do Gemini o Google pode usar os dados enviados para
 treinamento — irrelevante para ficha técnica de produto, mas fique ciente.
 
 ## Onde ajustar os padrões
 
-- Templates de descrição, padrão de título, regras de categoria e o prompt da
-  pesquisa web: `ia/ProductPrompts.java` — é o único lugar que você mexe
-  para mudar o padrão (vale para todos os provedores).
-- Tamanho/limite da imagem: `imagem/ImageProcessingService.java`; critérios da
-  imagem baixada da web (lado mínimo etc.): `imagem/ImageDownloadService.java`.
+- Templates de descrição, padrão de título, regras de categoria, o prompt da
+  pesquisa web e o prompt de verificação de imagem:
+  `ia/application/ProductPrompts.java` — é o lugar único do padrão de saída
+  (vale para todos os provedores).
+- Tratamento da imagem (1024², margem de 180px, ≤200 KB):
+  `imagem/application/ImageProcessingService.java`.
+- Busca/colheita de imagens (Kabum, galeria, lado mínimo):
+  `imagem/application/ImageDownloadService.java`.
+- Verificação por visão: `ia/application/VerificacaoImagemIaService.java`.
+- Quantidades (imagens mantidas/candidatas, páginas de marketplace):
+  constantes em `catalogo/application/ProductPipelineService.java`.
 
 ## Pontos a confirmar antes de produção
 
@@ -105,24 +179,37 @@ treinamento — irrelevante para ficha técnica de produto, mas fique ciente.
   na referência oficial: https://developer.bling.com.br/referencia
 - **URL pública da imagem**: o Bling precisa alcançar `APP_PUBLIC_BASE_URL` pela
   internet no momento da publicação. Em produção, use um domínio real ou um
-  bucket público (S3/R2/MinIO) — troque em `imagem/ImageStorageService.java`.
-- **Segredos**: nunca commite chaves; use variáveis de ambiente.
+  bucket público (S3/R2/MinIO) — implemente a porta `imagem/domain/ImageStorage`
+  no lugar de `imagem/infrastructure/DiskImageStorage`.
+- **Segredos**: nunca commite chaves. Use o `application-local.yml` (git-ignorado)
+  ou variáveis de ambiente.
 
 ## Estrutura
 
+Organização por **contextos DDD**, cada um em camadas (`domain` / `application`
+/ `infrastructure` / `web`):
+
 ```
 com.loja.catalogbling
-├── config/      records @ConfigurationProperties (anthropic, gemini, ollama, bling, app)
-├── domain/      entidades (Product, ProductStatus, ConversationTurn, BlingToken)
-├── repository/  repositórios JPA
-├── ia/          portas ChatIa + PesquisaWebIa, ProductPrompts,
-│   │            ConteudoIaService + PesquisaProdutoIaService (neutros de provedor)
-│   ├── claude/  AnthropicMessagesClient + ClaudeChat + ClaudePesquisaWeb
-│   ├── gemini/  GeminiClient + GeminiChat + GeminiPesquisaWeb (Google Search grounding)
-│   └── ollama/  OllamaChat (local, /api/chat)
-├── imagem/      ImageProcessingService + ImageStorage (interface) / DiskImageStorage
-│                + ImageDownloadService
-├── bling/       BlingAuthService (OAuth + refresh) + BlingProductClient (criar/buscar/atualizar)
-├── web/         controllers (produtos, OAuth Bling, serving de imagem)
-└── ProductPipelineService  orquestra o fluxo e a máquina de estados
+├── catalogo/          domínio central (aggregate Product)
+│   ├── domain/        Product, ProductImage, ProductStatus, ConversationTurn, ProductRepository
+│   ├── application/   ProductPipelineService (orquestrador + máquina de estados)
+│   └── web/           ProductController, HomeController
+├── ia/                subdomínio de conteúdo/pesquisa
+│   ├── domain/        portas ChatIa, PesquisaWebIa + value objects
+│   ├── application/   *IaService (conteúdo, pesquisa, verificação), ProductPrompts, RespostaJson
+│   └── infrastructure/ adapters claude/ gemini/ ollama/ + IaHttp
+├── bling/             integração ERP (anticorrupção)
+│   ├── domain/        BlingToken, BlingTokenRepository
+│   ├── infrastructure/ BlingAuthService (OAuth + refresh), BlingProductClient
+│   └── web/           BlingOAuthController
+├── imagem/            subdomínio de imagem
+│   ├── domain/        ImageStorage (porta)
+│   ├── application/   ImageProcessingService, ImageDownloadService
+│   └── infrastructure/ DiskImageStorage
+└── config/            @ConfigurationProperties (anthropic, gemini, ollama, bling, app)
 ```
+
+Máquina de estados do produto:
+`RASCUNHO → GERADO → EM_REVISAO ⟳ → APROVADO → PUBLICADO` (+ `ERRO_PUBLICACAO`;
+`PUBLICADO` pode voltar a `EM_REVISAO` ou republicar para atualizar o Bling).
