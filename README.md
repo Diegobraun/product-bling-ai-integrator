@@ -215,9 +215,23 @@ sequenceDiagram
   compressão binária de qualidade JPEG até ≤200 KB. PNG transparente (ex.: fotos
   oficiais de fabricante) fica com fundo branco.
 - **Uploads manuais não passam pela verificação** (a foto é sua escolha).
-- **Limitações**: páginas 100% renderizadas por JavaScript (galeria dinâmica) e
-  sites com bloqueio anti-bot (ex.: Cloudflare) não são raspáveis — nesses casos,
-  use um link de outra fonte ou o upload manual.
+- **Fallback headless (opcional, desligado por padrão)**: quando a extração
+  estática de uma página traz poucas imagens (< 2), o sistema pode renderizar a
+  página num navegador headless (Playwright) e repetir a extração sobre o HTML já
+  com o JavaScript executado. Isso resolve galerias dinâmicas onde as fotos só
+  aparecem após o JS (ex.: Samsung, que passa de 1 → ~11 imagens). **Não** vence
+  bloqueios anti-bot fortes (Akamai/Cloudflare em LG, Amazon, Mercado Livre e
+  Pichau detectam e barram o headless). Para ligar:
+  ```bash
+  # 1) baixe o Chromium uma vez
+  mvn -q dependency:build-classpath -Dmdep.outputFile=cp.txt
+  java -cp "$(cat cp.txt)" com.microsoft.playwright.CLI install chromium
+  # 2) rode com o fallback ativo
+  IMAGEM_HEADLESS_ENABLED=true mvn spring-boot:run
+  ```
+- **Limitações**: sites com bloqueio anti-bot (ex.: Cloudflare/Akamai) não são
+  raspáveis nem com o headless — nesses casos, use um link de outra fonte ou o
+  upload manual.
 
 ## Provedores de IA (Gemini, Claude, Ollama)
 

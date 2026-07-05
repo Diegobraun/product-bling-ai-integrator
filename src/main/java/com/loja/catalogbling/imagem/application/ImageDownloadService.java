@@ -1,5 +1,7 @@
 package com.loja.catalogbling.imagem.application;
 
+import com.loja.catalogbling.imagem.domain.RenderizadorPagina;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -24,6 +26,7 @@ import java.util.regex.Pattern;
 public class ImageDownloadService {
 
     private static final int LADO_MINIMO = 400;
+    private static final int LIMIAR_HEADLESS = 2;
     private static final int MAX_BYTES = 20 * 1024 * 1024;
     private static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -35,6 +38,12 @@ public class ImageDownloadService {
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(TIMEOUT_CONEXAO)
             .build();
+
+    private final ObjectProvider<RenderizadorPagina> renderizadores;
+
+    public ImageDownloadService(ObjectProvider<RenderizadorPagina> renderizadores) {
+        this.renderizadores = renderizadores;
+    }
 
     public record ImagemBaixada(byte[] bytes, String origem) {}
 
@@ -50,31 +59,33 @@ public class ImageDownloadService {
     private static final Pattern KABUM_PRODUTO =
             Pattern.compile("/produto/\\d+/[\\w\\-]+");
 
+    private static final String ESQUEMA = "(?:https?:)?//";
+
     private static final Pattern[] CDN_GALERIA = {
-            Pattern.compile("https://images\\d*\\.kabum\\.com\\.br/produtos/fotos/[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
-            Pattern.compile("https://http2\\.mlstatic\\.com/D_[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
-            Pattern.compile("https://m\\.media-amazon\\.com/images/I/[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
-            Pattern.compile("https://[\\w.\\-]*mlcdn\\.com\\.br/[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
-            Pattern.compile("https?://[\\w.\\-]+/[^\"'\\s\\\\]*,[^\"'\\s\\\\]*\\.(?:jpe?g|png|webp)"),
-            Pattern.compile("https?://[^\"'\\s\\\\]+?/image/upload/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://res\\.cloudinary\\.com/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://[\\w.\\-]+/arquivos/ids/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://[\\w.\\-]*vtexassets\\.com/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://images\\.ctfassets\\.net/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://[\\w.\\-]+\\.imgix\\.net/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://[\\w.\\-]+\\.sirv\\.com/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://images\\.salsify\\.com/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://[\\w.\\-]+\\.(?:widen\\.net|bynder\\.com)/[^\"'\\s\\\\)?]+"),
-            Pattern.compile("https?://[\\w.\\-]*(?:img|image|media|cdn|static|assets|photo|resource|dam)[\\w.\\-]*/[^\"'\\s\\\\)]+?\\.(?:jpe?g|png|webp)[^\"'\\s\\\\)]*"),
-            Pattern.compile("https?://[\\w.\\-]+/[^\"'\\s\\\\)]*[-/](?:gallery|feature|product)[-/][^\"'\\s\\\\)]*\\.(?:jpe?g|png|webp)[^\"'\\s\\\\)]*")
+            Pattern.compile(ESQUEMA + "images\\d*\\.kabum\\.com\\.br/produtos/fotos/[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
+            Pattern.compile(ESQUEMA + "http2\\.mlstatic\\.com/D_[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
+            Pattern.compile(ESQUEMA + "m\\.media-amazon\\.com/images/I/[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]*mlcdn\\.com\\.br/[\\w/.\\-]+?\\.(?:jpe?g|png|webp)"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]+/[^\"'\\s\\\\]*,[^\"'\\s\\\\]*\\.(?:jpe?g|png|webp)"),
+            Pattern.compile(ESQUEMA + "[^\"'\\s\\\\]+?/image/upload/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "res\\.cloudinary\\.com/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]+/arquivos/ids/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]*vtexassets\\.com/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "images\\.ctfassets\\.net/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]+\\.imgix\\.net/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]+\\.sirv\\.com/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "images\\.salsify\\.com/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]+\\.(?:widen\\.net|bynder\\.com)/[^\"'\\s\\\\)?]+"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]*(?:img|image|media|cdn|static|assets|photo|resource|dam)[\\w.\\-]*/[^\"'\\s\\\\)]+?\\.(?:jpe?g|png|webp)[^\"'\\s\\\\)]*"),
+            Pattern.compile(ESQUEMA + "[\\w.\\-]+/[^\"'\\s\\\\)]*[-/](?:gallery|feature|product)[-/][^\"'\\s\\\\)]*\\.(?:jpe?g|png|webp)[^\"'\\s\\\\)]*")
     };
 
     private static final Pattern JSONLD_IMAGE_ARRAY =
             Pattern.compile("\"image\"\\s*:\\s*\\[(.*?)]", Pattern.DOTALL);
     private static final Pattern URL_IMAGEM_ASPAS =
-            Pattern.compile("\"(https?://[^\"]+?\\.(?:jpe?g|png|webp)[^\"]*)\"");
+            Pattern.compile("\"((?:https?:)?//[^\"]+?\\.(?:jpe?g|png|webp)[^\"]*)\"");
     private static final Pattern SCENE7 =
-            Pattern.compile("https?://[\\w.\\-]+/is/image/[^\"'\\s\\\\)?]+");
+            Pattern.compile("(?:https?:)?//[\\w.\\-]+/is/image/[^\"'\\s\\\\)?]+");
 
     public List<ImagemBaixada> baixarCandidatas(List<String> urlsDiretas, List<String> paginas,
                                                 Set<String> coresExcluir, int maxTotal, int maxPorPagina) {
@@ -156,21 +167,40 @@ public class ImageDownloadService {
         List<String> urls = new ArrayList<>();
         try {
             byte[] corpo = baixar(pagina);
-            if (corpo == null) {
-                return urls;
+            if (corpo != null) {
+                extrairDeHtml(new String(corpo, StandardCharsets.UTF_8), urls);
             }
-            String html = new String(corpo, StandardCharsets.UTF_8);
-            acumularGaleriaJsonLd(html, urls);
-            for (Pattern padrao : META_IMAGEM) {
-                acumular(padrao, html, urls);
-            }
-            for (Pattern padrao : CDN_GALERIA) {
-                acumular(padrao, html, urls);
-            }
-            acumular(SCENE7, html, urls);
         } catch (Exception ignored) {
         }
+        if (urls.size() < LIMIAR_HEADLESS) {
+            complementarComHeadless(pagina, urls);
+        }
         return filtrarCor(urls, coresExcluir);
+    }
+
+    private void extrairDeHtml(String html, List<String> urls) {
+        acumularGaleriaJsonLd(html, urls);
+        for (Pattern padrao : META_IMAGEM) {
+            acumular(padrao, html, urls);
+        }
+        for (Pattern padrao : CDN_GALERIA) {
+            acumular(padrao, html, urls);
+        }
+        acumular(SCENE7, html, urls);
+    }
+
+    private void complementarComHeadless(String pagina, List<String> urls) {
+        RenderizadorPagina renderizador = renderizadores.getIfAvailable();
+        if (renderizador == null) {
+            return;
+        }
+        try {
+            String html = renderizador.renderizar(pagina);
+            if (html != null) {
+                extrairDeHtml(html, urls);
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     private static final String[] LIXO = {
@@ -212,7 +242,8 @@ public class ImageDownloadService {
         while (arrays.find()) {
             Matcher u = URL_IMAGEM_ASPAS.matcher(arrays.group(1));
             while (u.find()) {
-                String url = melhorarResolucao(u.group(1).replace("\\u002F", "/").replace("\\/", "/"));
+                String bruto = comEsquema(u.group(1).replace("\\u002F", "/").replace("\\/", "/"));
+                String url = melhorarResolucao(bruto);
                 if (url.startsWith("http") && !urls.contains(url)) {
                     urls.add(url);
                 }
@@ -223,8 +254,8 @@ public class ImageDownloadService {
     private void acumular(Pattern padrao, String html, List<String> urls) {
         Matcher m = padrao.matcher(html);
         while (m.find()) {
-            String bruto = (m.groupCount() >= 1 ? m.group(1) : m.group())
-                    .replace("\\/", "/").replace("&amp;", "&");
+            String bruto = comEsquema((m.groupCount() >= 1 ? m.group(1) : m.group())
+                    .replace("\\/", "/").replace("&amp;", "&"));
             if (!bruto.startsWith("http")) {
                 continue;
             }
@@ -233,6 +264,10 @@ public class ImageDownloadService {
                 urls.add(url);
             }
         }
+    }
+
+    private String comEsquema(String url) {
+        return url.startsWith("//") ? "https:" + url : url;
     }
 
     private String melhorarResolucao(String url) {
