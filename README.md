@@ -217,21 +217,36 @@ sequenceDiagram
 - **Uploads manuais não passam pela verificação** (a foto é sua escolha).
 - **Fallback headless (opcional, desligado por padrão)**: quando a extração
   estática de uma página traz poucas imagens (< 2), o sistema pode renderizar a
-  página num navegador headless (Playwright) e repetir a extração sobre o HTML já
-  com o JavaScript executado. Isso resolve galerias dinâmicas onde as fotos só
-  aparecem após o JS (ex.: Samsung, que passa de 1 → ~11 imagens). **Não** vence
-  bloqueios anti-bot fortes (Akamai/Cloudflare em LG, Amazon, Mercado Livre e
-  Pichau detectam e barram o headless). Para ligar:
+  página num navegador (Playwright) e repetir a extração sobre o HTML já com o
+  JavaScript executado. Resolve galerias dinâmicas onde as fotos só aparecem após
+  o JS (ex.: Samsung, que passa de 1 → ~11 imagens). Traz um modo **stealth**
+  (anti-detecção: mascara `navigator.webdriver`, UA/headers/idioma realistas,
+  `--disable-blink-features=AutomationControlled`) e opção de usar o **Chrome
+  real** e/ou janela **headed**. Eficácia medida:
+  | Proteção do site | Resultado |
+  | --- | --- |
+  | Galeria JS sem anti-bot (Samsung) | ✅ resolvido |
+  | Akamai (LG) | ✅ stealth passa (deixa de dar "Access Denied") |
+  | Cloudflare *managed challenge* (Pichau) | ❌ não passa nem com Chrome headed |
+  | SPA pesada (Mercado Livre) | ❌ não hidrata a galeria |
+
+  Cloudflare/SPA exigiriam proxy residencial ou serviço de CAPTCHA — fora do
+  escopo. Para ligar:
   ```bash
-  # 1) baixe o Chromium uma vez
+  # 1) baixe o Chromium uma vez (dispensável se usar o Chrome real via channel)
   mvn -q dependency:build-classpath -Dmdep.outputFile=cp.txt
   java -cp "$(cat cp.txt)" com.microsoft.playwright.CLI install chromium
-  # 2) rode com o fallback ativo
+  # 2) rode com o fallback ativo (stealth já vem ligado)
   IMAGEM_HEADLESS_ENABLED=true mvn spring-boot:run
+  # variantes: usar o Chrome instalado e/ou janela visível
+  IMAGEM_HEADLESS_ENABLED=true IMAGEM_HEADLESS_CHANNEL=chrome IMAGEM_HEADLESS_HEADED=true mvn spring-boot:run
   ```
-- **Limitações**: sites com bloqueio anti-bot (ex.: Cloudflare/Akamai) não são
-  raspáveis nem com o headless — nesses casos, use um link de outra fonte ou o
-  upload manual.
+  Toggles: `IMAGEM_HEADLESS_STEALTH` (padrão true), `IMAGEM_HEADLESS_HEADED`
+  (padrão false), `IMAGEM_HEADLESS_CHANNEL` (chromium|chrome|msedge),
+  `IMAGEM_HEADLESS_TIMEOUT_MS`, `IMAGEM_HEADLESS_ESPERA_MS`.
+- **Limitações**: sites com Cloudflare *managed challenge* e SPAs que só montam a
+  galeria via chamadas internas não são raspáveis nem com o headless stealth —
+  nesses casos, use um link de outra fonte ou o upload manual.
 
 ## Provedores de IA (Gemini, Claude, Ollama)
 

@@ -53,3 +53,8 @@ app:
 imagem:
   headless:
     enabled: ${IMAGEM_HEADLESS_ENABLED:false}
+    stealth: ${IMAGEM_HEADLESS_STEALTH:true}
+    headed: ${IMAGEM_HEADLESS_HEADED:false}
+    channel: ${IMAGEM_HEADLESS_CHANNEL:chromium}
+    timeout-ms: ${IMAGEM_HEADLESS_TIMEOUT_MS:30000}
+    espera-render-ms: ${IMAGEM_HEADLESS_ESPERA_MS:3500}
