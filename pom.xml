@@ -12,9 +12,9 @@
     </parent>
 
     <groupId>com.loja</groupId>
-    <artifactId>catalog-bling-ia-integration</artifactId>
+    <artifactId>product-bling-ai-integrator</artifactId>
     <version>1.0.0</version>
-    <name>catalog-bling-ia-integration</name>
+    <name>product-bling-ai-integrator</name>
     <description>Cadastro de produtos com IA: pesquisa web, tratamento de imagem e publicação no Bling</description>
 
     <properties>

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`catalog-bling-ia-integration` — Spring Boot dashboard (Portuguese/pt-BR) that researches products on the web from just a name, drafts listing content with an AI provider (Claude, Gemini, or Ollama — configurable), processes product images, and creates or updates products in the Bling v3 ERP — with a human review loop before publishing. Code, comments, and UI are all written in Portuguese; keep that convention. The codebase intentionally has no code comments — don't add them.
+`product-bling-ai-integrator` — Spring Boot dashboard (Portuguese/pt-BR) that researches products on the web from just a name, drafts listing content with an AI provider (Claude, Gemini, or Ollama — configurable), processes product images, and creates or updates products in the Bling v3 ERP — with a human review loop before publishing. Code, comments, and UI are all written in Portuguese; keep that convention. The codebase intentionally has no code comments — don't add them.
 
 ## Commands
 
@@ -22,7 +22,7 @@ Database is H2 on file (`./dados/catalogo`), auto-created via `ddl-auto=update`;
 
 ## Architecture
 
-Root package: `com.loja.catalogbling`. Organized by **DDD bounded contexts**, each split into layers (`domain` / `application` / `infrastructure` / `web`):
+Root package: `com.loja.productbling`. Organized by **DDD bounded contexts**, each split into layers (`domain` / `application` / `infrastructure` / `web`):
 
 - `catalogo/` — core domain: `domain` (the `Product` aggregate + `ProductImage`, `ProductStatus`, `ConversationTurn`, and the `ProductRepository` port), `application` (`ProductPipelineService`, the state-machine orchestrator), `web` (Thymeleaf/htmx controllers).
 - `ia/` — content/research subdomain: `domain` (ports `ChatIa`/`PesquisaWebIa` + value objects), `application` (the `*IaService` orchestrators + `ProductPrompts`/`RespostaJson`), `infrastructure` (provider adapters `claude`/`gemini`/`ollama` + `IaHttp`).

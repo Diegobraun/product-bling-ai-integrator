@@ -1,4 +1,4 @@
-# catalog-bling-ia-integration
+# product-bling-ai-integrator
 
 Pipeline de cadastro de produtos para e-commerce: pesquisa com IA + Bling.
 
@@ -314,7 +314,7 @@ treinamento — irrelevante para ficha técnica de produto, mas fique ciente.
 ## Estrutura de pacotes
 
 ```
-com.loja.catalogbling
+com.loja.productbling
 ├── catalogo/          domínio central (aggregate Product)
 │   ├── domain/        Product, ProductImage, ProductStatus, ConversationTurn, ProductRepository
 │   ├── application/   ProductPipelineService (orquestrador + máquina de estados)

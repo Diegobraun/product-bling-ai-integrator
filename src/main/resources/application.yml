@@ -1,6 +1,6 @@
 spring:
   application:
-    name: catalog-bling-ia-integration
+    name: product-bling-ai-integrator
 
   config:
     import: "optional:file:./application-local.yml"
